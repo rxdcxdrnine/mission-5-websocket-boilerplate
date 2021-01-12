@@ -13,7 +13,7 @@ import {
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import { appendLog, selectLogs } from "./chatSlice";
-import { io } from "socket.io-client";
+import { io } from "socket.io-client";  // socket on client (frontend)
 
 const useStyles = makeStyles({
   sendButton: {
@@ -45,20 +45,29 @@ socket.on("connect", () => {
 
 export function Chat() {
   const classes = useStyles();
-  const logs = useSelector(selectLogs);
+  const logs = useSelector(selectLogs); //useSelector 로 리덕스의 상태값 관리
   const dispatch = useDispatch();
   const [inputMessage, setInputMessage] = useState("");
+  const [inputNickname, setNickname] = useState("");
   const handleInputMessageChange = (event) => {
     setInputMessage(event.target.value);
   };
+  const handleNicknameChange = (event) => {
+    setNickname(event.target.value);
+  };
+
   useEffect(() => {
     socket.on("chat", (message) => {
-      console.log(`received: ${message}`);
-      dispatch(appendLog(`received: ${message}`));
+      console.log(`${message}`);
+      // 컴포넌트 렌더링할 때마다 웹 소켓에서 chat 으로 보낸 메시지를 received 를 달아 dispatch
+      // 리덕스의 상태값 중 chat.logs 에 log 추가
+      dispatch(appendLog(`${message}`));
     });
   }, [dispatch]);
+
   return (
     <Card className={classes.chatCard}>
+      {/*CardContent -> List items*/}
       <CardContent className={classes.dialogSection}>
         <Grid item xs={12}>
           <List>
@@ -67,7 +76,7 @@ export function Chat() {
                 <Grid container>
                   <Grid item xs={12}>
                     <ListItemText
-                      align={log.includes("sent") ? "right" : "left"}
+                      align={log.includes(`${inputNickname}`) ? "right" : "left"}
                       primary={log}
                     ></ListItemText>
                   </Grid>
@@ -77,9 +86,20 @@ export function Chat() {
           </List>
         </Grid>
       </CardContent>
+
+      {/*CardActions -> input*/}
       <CardActions className={classes.inputSection}>
         <Grid container>
-          <Grid xs={9}>
+          <Grid xs={4}>
+            <TextField
+                  label="별명"
+                  variant="outlined"
+                  size="small"
+                  value={inputNickname}
+                  onChange={handleNicknameChange}
+                />
+          </Grid>
+          <Grid xs={6}>
             <TextField
               label="메시지"
               variant="outlined"
@@ -88,15 +108,17 @@ export function Chat() {
               onChange={handleInputMessageChange}
             />
           </Grid>
-          <Grid xs={3}>
+          <Grid xs={1}>
             <Button
               className={classes.sendButton}
               variant="contained"
               color="primary"
               size="medium"
               onClick={() => {
-                dispatch(appendLog(`sent: ${inputMessage}`));
-                socket.emit("chat", inputMessage);
+                // 클릭할 때마다 입력한 메시지를 sent 를 달아 dispatch
+                // 리덕스의 상태값 중 chat.logs 에 log 추가
+                dispatch(appendLog(`${inputNickname + ' : ' + inputMessage}`));
+                socket.emit("chat", `${inputNickname + ' : ' + inputMessage}`);
                 setInputMessage("");
               }}
             >
@@ -105,6 +127,7 @@ export function Chat() {
           </Grid>
         </Grid>
       </CardActions>
+
     </Card>
   );
 }

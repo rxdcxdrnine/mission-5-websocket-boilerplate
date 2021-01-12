@@ -1,3 +1,4 @@
+// process.env.NODE_ENV == 5000
 process.env.NODE_ENV =
   process.env.NODE_ENV &&
   process.env.NODE_ENV.trim().toLowerCase() == "production"
@@ -9,8 +10,9 @@ const path = require("path");
 const express = require("express");
 const app = express();
 const server = require("http").createServer(app);
+
 // http server를 넘겨서 socket.io server 인스턴스를 생성한다.
-const io = require("socket.io")(server, { path: "/socket" });
+const io = require("socket.io")(server, { path: "/socket" }); // socket on server (backend)
 const PORT = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV === "production") {
@@ -28,14 +30,19 @@ io.on("connection", (socket) => {
   console.log("user connected");
 
   // socket `disconnect` event handler
-  socket.on("disconnect", () => {
+  socket.on("disconnect", (nickname) => {
     console.log("user disconnected");
   });
 
   // socket `chat` event handler
   socket.on("chat", (message) => {
     console.log(`chat: ${message}`);
-    io.emit("chat", "IMPLEMENT THIS");
+
+    // ECHO SERVICE
+    // socket.emit("chat", message);
+
+    //BRAODCAST SERVICE
+    socket.broadcast.emit("chat", message);
   });
 });
 
