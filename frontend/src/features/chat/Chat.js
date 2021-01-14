@@ -38,23 +38,27 @@ const useStyles = makeStyles({
 });
 
 const socket = io({ path: "/socket" });
-console.log(socket);
-socket.on("connect", () => {
-  console.log("socket connected");
-});
 
 export function Chat() {
   const classes = useStyles();
   const logs = useSelector(selectLogs); //useSelector 로 리덕스의 상태값 관리
   const dispatch = useDispatch();
   const [inputMessage, setInputMessage] = useState("");
-  const [inputNickname, setNickname] = useState("");
+  const [inputNickname, setNickname] = useState(`${Math.random().toString(36).substr(2,11)}`);
   const handleInputMessageChange = (event) => {
     setInputMessage(event.target.value);
   };
   const handleNicknameChange = (event) => {
     setNickname(event.target.value);
   };
+
+  window.onload = () => {
+    socket.emit("chat", `${inputNickname} 님이 입장하였습니다.`);
+  }
+
+  window.onunload = () => {
+    socket.emit("chat", `${inputNickname} 님이 퇴장하였습니다.`);
+  }
 
   useEffect(() => {
     socket.on("chat", (message) => {
@@ -105,7 +109,10 @@ export function Chat() {
               variant="outlined"
               size="small"
               value={inputMessage}
-              onChange={handleInputMessageChange}
+              onChange={(e) => {
+                handleInputMessageChange(e);
+                socket.emit("chat", `${inputNickname} 님이 입력하는 중입니다 ...`);
+              }}
             />
           </Grid>
           <Grid xs={1}>

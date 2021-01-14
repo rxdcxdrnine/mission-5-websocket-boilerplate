@@ -27,10 +27,10 @@ if (process.env.NODE_ENV === "production") {
 
 // socket.io `connection` event handler
 io.on("connection", (socket) => {
-  console.log("user connected");
+    console.log("user connected");
 
   // socket `disconnect` event handler
-  socket.on("disconnect", (nickname) => {
+  socket.on("disconnect", () => {
     console.log("user disconnected");
   });
 
@@ -44,6 +44,13 @@ io.on("connection", (socket) => {
     //BRAODCAST SERVICE
     socket.broadcast.emit("chat", message);
   });
+
+    // socket `chat` event handler
+    socket.on("input", (message) => {
+      console.log(`input: ${message}`);
+  
+      socket.broadcast.emit("input", message);
+    });
 });
 
 server.listen(PORT, () => {
